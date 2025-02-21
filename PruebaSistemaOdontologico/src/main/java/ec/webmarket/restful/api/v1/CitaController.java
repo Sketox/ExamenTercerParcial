@@ -1,7 +1,7 @@
 package ec.webmarket.restful.api.v1;
 
 
-import java.util.Optional;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,14 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ec.webmarket.restful.common.ApiConstants;
-import ec.webmarket.restful.domain.Cita;
-import ec.webmarket.restful.domain.Horario;
-import ec.webmarket.restful.domain.Paciente;
 import ec.webmarket.restful.dto.v1.CitaDTO;
 import ec.webmarket.restful.security.ApiResponseDTO;
 import ec.webmarket.restful.service.crud.CitaService;
-import ec.webmarket.restful.service.crud.HorarioService;
-import ec.webmarket.restful.service.crud.PacienteService;
 import jakarta.validation.Valid;
 
 @RestController
@@ -32,36 +27,65 @@ public class CitaController {
 	@Autowired
 	private CitaService entityService;
 	
-	@Autowired
-	private HorarioService entityServiceHorario;
-	
-	@Autowired
-	private PacienteService entityServicePaciente;
 
 	@GetMapping
 	public ResponseEntity<?> getAll() {
 		return new ResponseEntity<>(new ApiResponseDTO<>(true, entityService.findAll(new CitaDTO())), HttpStatus.OK);
 	}
 
-	 @PostMapping
-	    public ResponseEntity<?> create(@Valid @RequestBody CitaDTO dto) {
-	        try {
-	            if (dto.getHorarioAsignado() == null || dto.getHorarioAsignado().getId_horario() == null) {
-	                return new ResponseEntity<>(new ApiResponseDTO<>(false, "El horario asignado no puede ser nulo"), HttpStatus.BAD_REQUEST);
-	            }
-
-	            if (dto.getPacienteAsignado() == null || dto.getPacienteAsignado().getId_paciente() == null) {
-	                return new ResponseEntity<>(new ApiResponseDTO<>(false, "El paciente no puede ser nulo"), HttpStatus.BAD_REQUEST);
-	            }
-
-	            // Guardar la cita con validaciones
-	            CitaDTO createdDto = entityService.create(dto);
-
-	            return new ResponseEntity<>(new ApiResponseDTO<>(true, createdDto), HttpStatus.CREATED);
-	        } catch (Exception e) {
-	            return new ResponseEntity<>(new ApiResponseDTO<>(false, "Error al crear la cita: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+	@PostMapping
+	public ResponseEntity<?> create(@Valid @RequestBody CitaDTO dto) {
+	    try {
+	        System.out.println("DTO recibido: " + dto.getHorarioAsignado().getId_horario()); // Depuración
+	        
+	        // Validar que el horario y el paciente no sean nulos
+	        if (dto.getHorarioAsignado() == null || dto.getHorarioAsignado().getId_horario() == null) {
+	            return new ResponseEntity<>(new ApiResponseDTO<>(false, "El horario asignado no puede ser nulo"), HttpStatus.BAD_REQUEST);
 	        }
+
+	        if (dto.getPacienteAsignado() == null || dto.getPacienteAsignado().getId_paciente() == null) {
+	            return new ResponseEntity<>(new ApiResponseDTO<>(false, "El paciente no puede ser nulo"), HttpStatus.BAD_REQUEST);
+	        }
+
+
+	        // Llamar al servicio para crear la cita
+	        CitaDTO createdDto = entityService.create(dto);
+
+	        System.out.println("DTO creado: " + createdDto); // Depuración
+
+	        // Retornar el DTO con la cita creada en la respuesta
+	        return new ResponseEntity<>(new ApiResponseDTO<>(true, createdDto), HttpStatus.CREATED);
+	    } catch (Exception e) {
+	        // Capturar cualquier excepción y retornar un error
+	        return new ResponseEntity<>(new ApiResponseDTO<>(false, "Error al crear la cita: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
+	}
+	
+    // Endpoint para obtener todas las citas de un paciente por su ID
+    @GetMapping("/{idPaciente}/paciente")
+    public ResponseEntity<List<CitaDTO>> obtenerCitasPorPaciente(@PathVariable Long idPaciente) {
+        try {
+            List<CitaDTO> citasDTO = entityService.obtenerCitasPorPaciente(idPaciente);
+            return ResponseEntity.ok(citasDTO); // Retorna las citas con código 200 OK
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Si el paciente no se encuentra
+        }
+    }
+
+    // Endpoint para obtener citas por odontólogo
+    @GetMapping("/odontologo/{idOdontologo}")
+    public ResponseEntity<List<CitaDTO>> obtenerCitasPorOdontologo(@PathVariable Long idOdontologo) {
+        try {
+            // Obtener las citas por odontólogo usando el servicio
+            List<CitaDTO> citas = entityService.obtenerCitasPorOdontologo(idOdontologo);
+            return ResponseEntity.ok(citas);
+        } catch (RuntimeException e) {
+            // Si el odontólogo no se encuentra o algo falla, retornar un error
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+
 
 
 

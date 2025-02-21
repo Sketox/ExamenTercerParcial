@@ -19,26 +19,15 @@ public class Cita {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false, unique = true)
-    private Long id;
+    private Long id_cita;
 
     @ManyToOne
     @JoinColumn(name = "paciente_id", nullable = false)
-    private Paciente paciente;
-    
-    /*
-    @ManyToOne
-    @JoinColumn(name = "odontologo_id", nullable = false)
-    private Odontologo odontologo;
-	*/
+    private Paciente pacienteAsignado;
 
     @ManyToOne
     @JoinColumn(name = "horario_id", nullable = false)
-    private Horario horario;
-
-    /*
-    @Column(nullable = false)
-    private LocalDate fechaCita;
-   */
+    private Horario horarioAsignado;
 
     @Column(nullable = false)
     private String estado; // Puede ser "pendiente", "confirmada", "cancelada", etc.

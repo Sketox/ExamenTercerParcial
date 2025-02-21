@@ -29,9 +29,9 @@ public class PacienteService extends GenericCrudServiceImpl<Paciente, PacienteDT
 		return repository.findByNombre(nombre);
 	}
 	
-	   public Optional<Paciente> findById(Long id) {
-	        return repository.findById(id);
-	    }
+    public Optional<Paciente> findById(Long id) {
+        return repository.findById(id);
+    }
 
 	@Override
 	public void delete(PacienteDTO dto) {
